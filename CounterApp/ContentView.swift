@@ -8,12 +8,35 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var count = 0
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        VStack(spacing: 20) {
+            Text("Counter")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            
+            Text("\(count)")
+                .font(.system(size: 60))
+                .fontWeight(.medium)
+            
+            HStack(spacing: 20) {
+                Button(action: {
+                    count -= 1
+                }) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.red)
+                }
+                
+                Button(action: {
+                    count += 1
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.green)
+                }
+            }
         }
         .padding()
     }
