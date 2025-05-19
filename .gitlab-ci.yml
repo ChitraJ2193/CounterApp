@@ -1,7 +1,8 @@
 image: xcode:14.3
 
 variables:
-  PROJECT_ID: "your-google-cloud-project-id"  # Replace with your actual Google Cloud project ID
+  PROJECT_ID: "counterapplication-460304"
+  PROJECT_NUMBER: "189419000467"
   APP_NAME: "CounterApp"
 
 stages:
@@ -29,6 +30,12 @@ deploy:
     - source $HOME/google-cloud-sdk/path.bash.inc
     - gcloud auth activate-service-account --key-file=$GOOGLE_CLOUD_KEY_FILE
     - gcloud config set project $PROJECT_ID
+    
+    # Add IAM policy binding with specific project number
+    - gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+        --role="roles/cloudbuild.builds.builder"
+    
     - echo "Deploying to Google Cloud..."
     # Add your deployment commands here
   only:
