@@ -50,7 +50,12 @@ deploy:
     
     # Generate a secret token for webhook
     - export WEBHOOK_SECRET=$(openssl rand -base64 32)
-    - echo "Generated Webhook Secret: $WEBHOOK_SECRET"
+    - echo "================================================"
+    - echo "IMPORTANT: WEBHOOK SECRET FOR GITLAB CONFIGURATION"
+    - echo "================================================"
+    - echo "Please copy this secret and use it in GitLab webhook configuration:"
+    - echo "$WEBHOOK_SECRET"
+    - echo "================================================"
     
     # Configure webhook with authentication
     - gcloud builds triggers create webhook \
@@ -61,10 +66,6 @@ deploy:
         --service-account="projects/$PROJECT_ID/serviceAccounts/$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
         --webhook-config-url="https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/triggers/gitlab-webhook:run" \
         --webhook-config-secret="$WEBHOOK_SECRET"
-    
-    # Store the webhook secret in GitLab CI/CD variables
-    - echo "Please add the following as a GitLab CI/CD variable:"
-    - echo "WEBHOOK_SECRET: $WEBHOOK_SECRET"
     
     - echo "Deploying to Google Cloud..."
     # Add your deployment commands here
