@@ -1,0 +1,37 @@
+image: xcode:14.3
+
+variables:
+  PROJECT_ID: "your-google-cloud-project-id"  # Replace with your actual Google Cloud project ID
+  APP_NAME: "CounterApp"
+
+stages:
+  - build
+  - deploy
+
+before_script:
+  - gem install bundler
+  - bundle install
+
+build:
+  stage: build
+  script:
+    - xcodebuild -scheme CounterApp -configuration Release -sdk iphonesimulator
+  artifacts:
+    paths:
+      - build/Release-iphonesimulator/
+    expire_in: 1 week
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Installing Google Cloud SDK..."
+    - curl https://sdk.cloud.google.com | bash
+    - source $HOME/google-cloud-sdk/path.bash.inc
+    - gcloud auth activate-service-account --key-file=$GOOGLE_CLOUD_KEY_FILE
+    - gcloud config set project $PROJECT_ID
+    - echo "Deploying to Google Cloud..."
+    # Add your deployment commands here
+  only:
+    - main  # Only deploy from main branch
+  environment:
+    name: production 
