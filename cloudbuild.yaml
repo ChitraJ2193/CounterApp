@@ -4,7 +4,7 @@ steps:
     entrypoint: 'xcodebuild'
     args:
       - '-scheme'
-      - 'CounterApp'
+      - 'CounterApplication'
       - '-configuration'
       - 'Release'
       - '-sdk'
@@ -15,9 +15,9 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'counter-app'
+      - 'counter-application'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/counter-app'
+      - 'gcr.io/$PROJECT_ID/counter-application'
       - '--platform'
       - 'managed'
       - '--region'

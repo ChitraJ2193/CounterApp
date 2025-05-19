@@ -3,7 +3,7 @@ image: xcode:14.3
 variables:
   PROJECT_ID: "counterapplication-460304"
   PROJECT_NUMBER: "189419000467"
-  APP_NAME: "CounterApp"
+  APP_NAME: "CounterApplication"
 
 stages:
   - build
