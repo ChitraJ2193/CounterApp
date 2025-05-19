@@ -25,30 +25,45 @@ build:
 deploy:
   stage: deploy
   script:
+    - echo "Starting deployment process..."
     - echo "Installing Google Cloud SDK..."
     - curl https://sdk.cloud.google.com | bash
     - source $HOME/google-cloud-sdk/path.bash.inc
-    - gcloud auth activate-service-account --key-file=$GOOGLE_CLOUD_KEY_FILE
-    - gcloud config set project $PROJECT_ID
+    
+    # Debug: Print current directory and list files
+    - pwd
+    - ls -la
+    
+    # Debug: Check if service account key file exists
+    - if [ -f "$GOOGLE_CLOUD_KEY_FILE" ]; then echo "Service account key file exists"; else echo "Service account key file not found"; fi
+    
+    - echo "Authenticating with Google Cloud..."
+    - gcloud auth activate-service-account --key-file=$GOOGLE_CLOUD_KEY_FILE || { echo "Failed to authenticate with Google Cloud"; exit 1; }
+    
+    - echo "Setting project..."
+    - gcloud config set project $PROJECT_ID || { echo "Failed to set project"; exit 1; }
     
     # Enable required APIs
-    - gcloud services enable cloudbuild.googleapis.com
-    - gcloud services enable cloudresourcemanager.googleapis.com
-    - gcloud services enable iam.googleapis.com
-    - gcloud services enable run.googleapis.com
-    - gcloud services enable logging.googleapis.com
+    - echo "Enabling required APIs..."
+    - gcloud services enable cloudbuild.googleapis.com || { echo "Failed to enable Cloud Build API"; exit 1; }
+    - gcloud services enable cloudresourcemanager.googleapis.com || { echo "Failed to enable Cloud Resource Manager API"; exit 1; }
+    - gcloud services enable iam.googleapis.com || { echo "Failed to enable IAM API"; exit 1; }
+    - gcloud services enable run.googleapis.com || { echo "Failed to enable Cloud Run API"; exit 1; }
+    - gcloud services enable logging.googleapis.com || { echo "Failed to enable Logging API"; exit 1; }
     
     # Add IAM policy binding with specific project number
+    - echo "Setting up IAM permissions..."
     - gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
-        --role="roles/cloudbuild.builds.builder"
+        --role="roles/cloudbuild.builds.builder" || { echo "Failed to add Cloud Build builder role"; exit 1; }
     
     # Add logging permissions
     - gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
-        --role="roles/logging.logWriter"
+        --role="roles/logging.logWriter" || { echo "Failed to add logging role"; exit 1; }
     
     # Generate a secret token for webhook
+    - echo "Generating webhook secret..."
     - export WEBHOOK_SECRET=$(openssl rand -base64 32)
     - echo "================================================"
     - echo "IMPORTANT: WEBHOOK SECRET FOR GITLAB CONFIGURATION"
@@ -58,6 +73,7 @@ deploy:
     - echo "================================================"
     
     # Configure webhook with authentication
+    - echo "Configuring webhook..."
     - gcloud builds triggers create webhook \
         --name="gitlab-webhook" \
         --description="GitLab webhook trigger" \
@@ -65,10 +81,9 @@ deploy:
         --build-config="cloudbuild.yaml" \
         --service-account="projects/$PROJECT_ID/serviceAccounts/$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
         --webhook-config-url="https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/triggers/gitlab-webhook:run" \
-        --webhook-config-secret="$WEBHOOK_SECRET"
+        --webhook-config-secret="$WEBHOOK_SECRET" || { echo "Failed to create webhook trigger"; exit 1; }
     
-    - echo "Deploying to Google Cloud..."
-    # Add your deployment commands here
+    - echo "Deployment process completed successfully!"
   only:
     - main  # Only deploy from main branch
   environment:
