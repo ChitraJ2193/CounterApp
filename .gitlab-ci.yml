@@ -31,10 +31,23 @@ deploy:
     - gcloud auth activate-service-account --key-file=$GOOGLE_CLOUD_KEY_FILE
     - gcloud config set project $PROJECT_ID
     
+    # Enable required APIs
+    - gcloud services enable cloudbuild.googleapis.com
+    - gcloud services enable cloudresourcemanager.googleapis.com
+    - gcloud services enable iam.googleapis.com
+    - gcloud services enable run.googleapis.com
+    
     # Add IAM policy binding with specific project number
     - gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
         --role="roles/cloudbuild.builds.builder"
+    
+    # Configure webhook
+    - gcloud builds triggers create webhook \
+        --name="gitlab-webhook" \
+        --description="GitLab webhook trigger" \
+        --branch-pattern="main" \
+        --build-config="cloudbuild.yaml"
     
     - echo "Deploying to Google Cloud..."
     # Add your deployment commands here

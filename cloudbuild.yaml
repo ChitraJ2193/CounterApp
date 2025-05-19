@@ -1,0 +1,29 @@
+steps:
+  # Build the iOS app
+  - name: 'xcode:14.3'
+    entrypoint: 'xcodebuild'
+    args:
+      - '-scheme'
+      - 'CounterApp'
+      - '-configuration'
+      - 'Release'
+      - '-sdk'
+      - 'iphonesimulator'
+
+  # Deploy step (placeholder for your deployment needs)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'counter-app'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/counter-app'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+
+timeout: '1800s'
+options:
+  logging: CLOUD_LOGGING_ONLY 
