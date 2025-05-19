@@ -1,5 +1,3 @@
-image: xcode:14.3
-
 variables:
   PROJECT_ID: "counterapplication-460304"
   PROJECT_NUMBER: "189419000467"
@@ -15,11 +13,15 @@ before_script:
 
 build:
   stage: build
+  tags:
+    - macos
   script:
-    - echo "Building..."
+    - xcodebuild -scheme CounterApplication -configuration Release -sdk iphonesimulator
 
 deploy:
   stage: deploy
+  tags:
+    - macos
   script:
     - echo "Deploying..."
   only:
