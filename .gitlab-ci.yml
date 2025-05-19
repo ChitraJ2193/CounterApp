@@ -48,13 +48,18 @@ deploy:
         --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
         --role="roles/logging.logWriter"
     
+    # Get the webhook URL
+    - export WEBHOOK_URL=$(gcloud builds triggers describe gitlab-webhook --format='value(webhookConfig.url)')
+    - echo "Webhook URL: $WEBHOOK_URL"
+    
     # Configure webhook
     - gcloud builds triggers create webhook \
         --name="gitlab-webhook" \
         --description="GitLab webhook trigger" \
         --branch-pattern="main" \
         --build-config="cloudbuild.yaml" \
-        --service-account="projects/$PROJECT_ID/serviceAccounts/$PROJECT_NUMBER@cloudbuild.gserviceaccount.com"
+        --service-account="projects/$PROJECT_ID/serviceAccounts/$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+        --webhook-config-url="https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/triggers/gitlab-webhook:run"
     
     - echo "Deploying to Google Cloud..."
     # Add your deployment commands here
