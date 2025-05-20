@@ -1,4 +1,11 @@
 steps:
+  # Create build directory
+  - name: 'ubuntu'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'mkdir -p build/export'
+
   # Build the iOS app
   - name: 'xcode:14.3'
     entrypoint: 'xcodebuild'
@@ -12,6 +19,17 @@ steps:
       - 'build/CounterApplication.xcarchive'
       - '-sdk'
       - 'iphoneos'
+      - '-verbose'
+      - 'CODE_SIGN_IDENTITY='
+      - 'CODE_SIGNING_REQUIRED=NO'
+      - 'CODE_SIGNING_ALLOWED=NO'
+
+  # List contents of build directory
+  - name: 'ubuntu'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'ls -la build/'
 
   # Export IPA from archive
   - name: 'xcode:14.3'
@@ -24,6 +42,14 @@ steps:
       - 'build/export'
       - '-exportOptionsPlist'
       - 'exportOptions.plist'
+      - '-verbose'
+
+  # List contents of export directory
+  - name: 'ubuntu'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'ls -la build/export/'
 
   # Upload IPA to GCP bucket
   - name: 'gcr.io/cloud-builders/gsutil'
