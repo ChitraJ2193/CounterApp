@@ -16,14 +16,21 @@ build:
   tags:
     - macos
   script:
-    - xcodebuild -scheme CounterApplication -configuration Release -sdk iphonesimulator
+    - xcodebuild -scheme $APP_NAME -configuration Release -sdk iphonesimulator
+  artifacts:
+    paths:
+      - build/Release-iphonesimulator/
 
 deploy:
   stage: deploy
   tags:
     - macos
+  image: google/cloud-sdk:slim
   script:
-    - echo "Deploying..."
+    - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud config set project $PROJECT_ID
+    - gsutil cp -r build/Release-iphonesimulator/* gs://your-gcs-bucket/path/
   only:
     - main
   environment:
