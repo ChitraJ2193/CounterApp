@@ -8,7 +8,9 @@ stages:
   - deploy
 
 before_script:
-  - sudo gem install bundler
+  - gem install --user-install bundler
+  - export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
+  - bundle install
 
 build:
   stage: build
