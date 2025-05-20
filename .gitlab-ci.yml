@@ -8,7 +8,7 @@ stages:
   - deploy
 
 before_script:
-  - gem install bundler
+  - sudo gem install bundler
   - bundle install
 
 build:
