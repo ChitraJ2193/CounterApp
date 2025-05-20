@@ -14,7 +14,7 @@ before_script:
 build:
   stage: build
   tags:
-    - macos
+    - macOS
   script:
     - xcodebuild -scheme $APP_NAME -configuration Release -sdk iphonesimulator
   artifacts:
