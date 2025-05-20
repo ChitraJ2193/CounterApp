@@ -38,7 +38,7 @@ options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
 
 substitutions:
-  _BUCKET_NAME: 'your-bucket-name'  # Replace with your actual bucket name
+  _BUCKET_NAME: 'counter_gitcicd_app'  # Replace with your actual bucket name
 
 # Deploy step (placeholder for your deployment needs)
 - name: 'gcr.io/cloud-builders/gcloud'
