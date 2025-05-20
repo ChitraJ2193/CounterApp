@@ -3,28 +3,53 @@ steps:
   - name: 'xcode:14.3'
     entrypoint: 'xcodebuild'
     args:
+      - 'archive'
       - '-scheme'
       - 'CounterApplication'
       - '-configuration'
       - 'Release'
+      - '-archivePath'
+      - 'build/CounterApplication.xcarchive'
       - '-sdk'
-      - 'iphonesimulator'
+      - 'iphoneos'
 
-  # Deploy step (placeholder for your deployment needs)
-  - name: 'gcr.io/cloud-builders/gcloud'
+  # Export IPA from archive
+  - name: 'xcode:14.3'
+    entrypoint: 'xcodebuild'
     args:
-      - 'run'
-      - 'deploy'
-      - 'counter-application'
-      - '--image'
-      - 'gcr.io/$PROJECT_ID/counter-application'
-      - '--platform'
-      - 'managed'
-      - '--region'
-      - 'us-central1'
-      - '--allow-unauthenticated'
+      - '-exportArchive'
+      - '-archivePath'
+      - 'build/CounterApplication.xcarchive'
+      - '-exportPath'
+      - 'build/export'
+      - '-exportOptionsPlist'
+      - 'exportOptions.plist'
+
+  # Upload IPA to GCP bucket
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args:
+      - 'cp'
+      - 'build/export/CounterApplication.ipa'
+      - 'gs://${_BUCKET_NAME}/ios-builds/CounterApplication-${BUILD_ID}.ipa'
 
 timeout: '1800s'
 options:
   logging: CLOUD_LOGGING_ONLY
-  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET 
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+
+substitutions:
+  _BUCKET_NAME: 'your-bucket-name'  # Replace with your actual bucket name
+
+# Deploy step (placeholder for your deployment needs)
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - 'run'
+    - 'deploy'
+    - 'counter-application'
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/counter-application'
+    - '--platform'
+    - 'managed'
+    - '--region'
+    - 'us-central1'
+    - '--allow-unauthenticated' 

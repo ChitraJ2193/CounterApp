@@ -12,7 +12,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Counter Test New label")
+            Text("Counter Test New label IPA")
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
