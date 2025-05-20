@@ -9,7 +9,6 @@ stages:
 
 before_script:
   - sudo gem install bundler
-  - bundle install
 
 build:
   stage: build
