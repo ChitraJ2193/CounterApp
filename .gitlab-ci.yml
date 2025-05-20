@@ -9,11 +9,13 @@ stages:
 
 before_script: []
 
+# Build stage for iOS simulator
 build:
   stage: build
   tags:
     - macOS
   script:
+    - echo "Building iOS app for simulator..."
     - xcodebuild -scheme $APP_NAME -configuration Release -sdk iphonesimulator -derivedDataPath build
   artifacts:
     paths:
