@@ -1,25 +1,70 @@
+image: xcode:15.0
+
 variables:
   PROJECT_ID: "counterapplication-460304"
   PROJECT_NUMBER: "189419000467"
   APP_NAME: "CounterApp"
+  XCODE_PROJECT: "Number  Counter Application.xcodeproj"
+  XCODE_SCHEME: "Number  Counter Application"
+  APPLE_TEAM_ID: "${APPLE_TEAM_ID}"
+  APPLE_DISTRIBUTION_CERTIFICATE: "${APPLE_DISTRIBUTION_CERTIFICATE}"
+  APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: "${APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD}"
+  APPLE_PROVISIONING_PROFILE: "${APPLE_PROVISIONING_PROFILE}"
 
 stages:
+  - lint
+  - test
   - build
   - deploy
 
-before_script: []
+before_script:
+  - gem install bundler
+  - bundle install
+  - bundle exec fastlane setup_ci
+  - xcodebuild -list -project "$XCODE_PROJECT"
+  - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
+
+lint:
+  stage: lint
+  script:
+    - swiftlint lint
+  allow_failure: true
+
+unit_tests:
+  stage: test
+  script:
+    - xcodebuild test -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' -enableCodeCoverage YES | xcpretty
+  artifacts:
+    reports:
+      junit: build/reports/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: build/reports/coverage.xml
+    paths:
+      - build/reports/
+    expire_in: 1 week
+
+ui_tests:
+  stage: test
+  script:
+    - xcodebuild test -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' -only-testing:UITests | xcpretty
+  artifacts:
+    reports:
+      junit: build/reports/ui-tests.xml
+    paths:
+      - build/reports/
+    expire_in: 1 week
 
 build:
   stage: build
-  tags:
-    - macOS
   script:
-    - xcodebuild -scheme $APP_NAME -configuration Release -sdk iphonesimulator -derivedDataPath build
+    - bundle exec fastlane build
   artifacts:
     paths:
-      - build/Build/Products/Release-iphonesimulator/
+      - build/
+    expire_in: 1 week
 
-deploy:
+deploy_staging:
   stage: deploy
   tags:
     - macOS
@@ -28,6 +73,32 @@ deploy:
     - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
     - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcp-key.json
     - gcloud config set project $PROJECT_ID
-    - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/
+    - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/staging/
   environment:
-    name: production 
+    name: staging
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy
+  tags:
+    - macOS
+  image: google/cloud-sdk:slim
+  script:
+    - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcp-key.json
+    - gcloud config set project $PROJECT_ID
+    - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/production/
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+
+deploy_testflight:
+  stage: deploy
+  script:
+    - bundle exec fastlane beta
+  only:
+    - main
+  when: manual 
