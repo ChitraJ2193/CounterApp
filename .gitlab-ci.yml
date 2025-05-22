@@ -22,7 +22,9 @@ stages:
 
 before_script:
   - brew install ruby@3.2
-  - echo 'export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
+  - echo 'export PATH="/Users/chitrajoshy/.homebrew/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
+  - echo 'export LDFLAGS="-L/Users/chitrajoshy/.homebrew/opt/ruby@3.2/lib"' >> ~/.bash_profile
+  - echo 'export CPPFLAGS="-I/Users/chitrajoshy/.homebrew/opt/ruby@3.2/include"' >> ~/.bash_profile
   - source ~/.bash_profile
   - gem install bundler
   - bundle install
@@ -36,7 +38,9 @@ setup:
     - macOS
   script:
     - brew install ruby@3.2
-    - echo 'export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
+    - echo 'export PATH="/Users/chitrajoshy/.homebrew/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
+    - echo 'export LDFLAGS="-L/Users/chitrajoshy/.homebrew/opt/ruby@3.2/lib"' >> ~/.bash_profile
+    - echo 'export CPPFLAGS="-I/Users/chitrajoshy/.homebrew/opt/ruby@3.2/include"' >> ~/.bash_profile
     - source ~/.bash_profile
     - gem install bundler
     - bundle install
