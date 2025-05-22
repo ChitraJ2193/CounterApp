@@ -12,6 +12,9 @@ variables:
   APPLE_DISTRIBUTION_CERTIFICATE: "${APPLE_DISTRIBUTION_CERTIFICATE}"
   APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: "${APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD}"
   APPLE_PROVISIONING_PROFILE: "${APPLE_PROVISIONING_PROFILE}"
+  FASTLANE_USER: "${FASTLANE_USER}"
+  FASTLANE_PASSWORD: "${FASTLANE_PASSWORD}"
+  MATCH_PASSWORD: "${MATCH_PASSWORD}"
 
 stages:
   - setup
@@ -62,7 +65,7 @@ unit_tests:
   tags:
     - macOS
   script:
-    - xcodebuild test -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' -enableCodeCoverage YES | xcpretty
+    - bundle exec fastlane test
   artifacts:
     reports:
       junit: build/reports/junit.xml
@@ -78,7 +81,7 @@ ui_tests:
   tags:
     - macOS
   script:
-    - xcodebuild test -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' -only-testing:UITests | xcpretty
+    - bundle exec fastlane test
   artifacts:
     reports:
       junit: build/reports/ui-tests.xml
