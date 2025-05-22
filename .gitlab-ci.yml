@@ -14,17 +14,36 @@ variables:
   APPLE_PROVISIONING_PROFILE: "${APPLE_PROVISIONING_PROFILE}"
 
 stages:
+  - setup
   - lint
   - test
   - build
   - deploy
 
 before_script:
+  - brew install ruby@3.2
+  - echo 'export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
+  - source ~/.bash_profile
   - gem install bundler
   - bundle install
   - bundle exec fastlane setup_ci
   - xcodebuild -list -project "$XCODE_PROJECT"
   - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
+
+setup:
+  stage: setup
+  tags:
+    - macOS
+  script:
+    - brew install ruby@3.2
+    - echo 'export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
+    - source ~/.bash_profile
+    - gem install bundler
+    - bundle install
+  artifacts:
+    paths:
+      - vendor/bundle/
+    expire_in: 1 week
 
 lint:
   stage: lint
