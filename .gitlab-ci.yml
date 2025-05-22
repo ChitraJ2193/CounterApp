@@ -21,7 +21,7 @@ stages:
   - deploy
 
 before_script:
-  - brew install ruby@3.2
+  - brew install ruby@3.2 swiftlint
   - echo 'export PATH="/Users/chitrajoshy/.homebrew/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
   - echo 'export LDFLAGS="-L/Users/chitrajoshy/.homebrew/opt/ruby@3.2/lib"' >> ~/.bash_profile
   - echo 'export CPPFLAGS="-I/Users/chitrajoshy/.homebrew/opt/ruby@3.2/include"' >> ~/.bash_profile
@@ -37,7 +37,7 @@ setup:
   tags:
     - macOS
   script:
-    - brew install ruby@3.2
+    - brew install ruby@3.2 swiftlint
     - echo 'export PATH="/Users/chitrajoshy/.homebrew/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
     - echo 'export LDFLAGS="-L/Users/chitrajoshy/.homebrew/opt/ruby@3.2/lib"' >> ~/.bash_profile
     - echo 'export CPPFLAGS="-I/Users/chitrajoshy/.homebrew/opt/ruby@3.2/include"' >> ~/.bash_profile
