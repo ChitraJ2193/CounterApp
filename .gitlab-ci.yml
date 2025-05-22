@@ -1,4 +1,4 @@
-image: xcode:15.0
+image: macos:latest
 
 variables:
   PROJECT_ID: "counterapplication-460304"
@@ -67,7 +67,7 @@ build:
 deploy_staging:
   stage: deploy
   tags:
-    - macOS
+    - macos
   image: google/cloud-sdk:slim
   script:
     - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
@@ -82,7 +82,7 @@ deploy_staging:
 deploy_production:
   stage: deploy
   tags:
-    - macOS
+    - macos
   image: google/cloud-sdk:slim
   script:
     - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
