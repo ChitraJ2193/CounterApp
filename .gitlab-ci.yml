@@ -15,6 +15,8 @@ variables:
   FASTLANE_USER: "${FASTLANE_USER}"
   FASTLANE_PASSWORD: "${FASTLANE_PASSWORD}"
   MATCH_PASSWORD: "${MATCH_PASSWORD}"
+  LC_ALL: "en_US.UTF-8"
+  LANG: "en_US.UTF-8"
 
 stages:
   - setup
@@ -28,14 +30,19 @@ before_script:
   - export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"
   - export LDFLAGS="-L/usr/local/opt/ruby@3.2/lib"
   - export CPPFLAGS="-I/usr/local/opt/ruby@3.2/include"
-  - gem install bundler
-  - bundle install
+  - gem uninstall bundler
+  - gem install bundler -v 2.4.22
+  - bundle config set --local path 'vendor/bundle'
+  - bundle install --jobs=4 --retry=3
 
 setup:
   stage: setup
   tags:
     - macOS
   script:
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
     - bundle exec fastlane setup_ci
     - xcodebuild -list -project "$XCODE_PROJECT"
     - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
@@ -57,6 +64,8 @@ test:
   tags:
     - macOS
   script:
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
     - bundle exec fastlane test
   artifacts:
     reports:
@@ -73,6 +82,8 @@ build:
   tags:
     - macOS
   script:
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
     - bundle exec fastlane build
   artifacts:
     paths:
@@ -113,6 +124,8 @@ deploy_testflight:
   tags:
     - macOS
   script:
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
     - bundle exec fastlane beta
   only:
     - main
