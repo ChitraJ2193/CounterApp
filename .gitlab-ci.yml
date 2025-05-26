@@ -35,14 +35,18 @@ stages:
 
 before_script:
   - brew uninstall --force ruby@3.2 || true
+  - brew uninstall --force ruby@3.1 || true
   - brew install ruby@3.1 swiftlint
-  - export PATH="/opt/homebrew/opt/ruby@3.1/bin:$PATH"
-  - export LDFLAGS="-L/opt/homebrew/opt/ruby@3.1/lib"
-  - export CPPFLAGS="-I/opt/homebrew/opt/ruby@3.1/include"
+  - echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile
+  - source ~/.bash_profile
+  - echo 'export PATH="/opt/homebrew/opt/ruby@3.1/bin:$PATH"' >> ~/.bash_profile
+  - echo 'export LDFLAGS="-L/opt/homebrew/opt/ruby@3.1/lib"' >> ~/.bash_profile
+  - echo 'export CPPFLAGS="-I/opt/homebrew/opt/ruby@3.1/include"' >> ~/.bash_profile
+  - source ~/.bash_profile
   - which ruby
   - ruby -v
   - gem uninstall bundler --all || true
-  - gem install bundler -v 2.4.22
+  - gem install bundler -v 2.4.22 --user-install
   - bundle config set --local path 'vendor/bundle'
   - bundle config set clean 'true'
   - bundle config set --local without 'development test'
