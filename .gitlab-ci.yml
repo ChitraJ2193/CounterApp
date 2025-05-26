@@ -23,8 +23,8 @@ variables:
   FASTLANE_SILENT: "true"
   RUBYOPT: "-W0"
   BUNDLE_GEMFILE: "${CI_PROJECT_DIR}/Gemfile"
-  FASTLANE_VERSION: "2.212.2"
-  RUBY_VERSION: "3.1.4"
+  FASTLANE_VERSION: "2.210.1"
+  RUBY_VERSION: "3.0.6"
 
 stages:
   - setup
@@ -36,12 +36,13 @@ stages:
 before_script:
   - brew uninstall --force ruby@3.2 || true
   - brew uninstall --force ruby@3.1 || true
-  - brew install ruby@3.1 swiftlint
+  - brew uninstall --force ruby@3.0 || true
+  - brew install ruby@3.0 swiftlint
   - echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile
   - source ~/.bash_profile
-  - echo 'export PATH="/opt/homebrew/opt/ruby@3.1/bin:$PATH"' >> ~/.bash_profile
-  - echo 'export LDFLAGS="-L/opt/homebrew/opt/ruby@3.1/lib"' >> ~/.bash_profile
-  - echo 'export CPPFLAGS="-I/opt/homebrew/opt/ruby@3.1/include"' >> ~/.bash_profile
+  - echo 'export PATH="/opt/homebrew/opt/ruby@3.0/bin:$PATH"' >> ~/.bash_profile
+  - echo 'export LDFLAGS="-L/opt/homebrew/opt/ruby@3.0/lib"' >> ~/.bash_profile
+  - echo 'export CPPFLAGS="-I/opt/homebrew/opt/ruby@3.0/include"' >> ~/.bash_profile
   - source ~/.bash_profile
   - which ruby
   - ruby -v
@@ -55,6 +56,9 @@ before_script:
   - export RUBY_THREAD_VM_STACK_SIZE=1048576
   - export RUBY_GC_HEAP_GROWTH_MAX_SLOTS=40000
   - export RUBY_GC_HEAP_INIT_SLOTS=40000
+  - export RUBYLIB=""
+  - export GEM_PATH=""
+  - export GEM_HOME="${CI_PROJECT_DIR}/vendor/bundle"
   - bundle config set --local path 'vendor/bundle'
   - bundle config set clean 'true'
   - bundle config set --local without 'development test'
