@@ -23,6 +23,7 @@ variables:
   FASTLANE_SILENT: "true"
   RUBYOPT: "-W0"
   BUNDLE_GEMFILE: "${CI_PROJECT_DIR}/Gemfile"
+  FASTLANE_VERSION: "2.212.2"
 
 stages:
   - setup
@@ -41,6 +42,7 @@ before_script:
   - bundle config set --local path 'vendor/bundle'
   - bundle config set clean 'true'
   - bundle config set --local without 'development test'
+  - bundle config set --local deployment 'false'
   - bundle install --jobs=4 --retry=3
 
 setup:
@@ -50,6 +52,11 @@ setup:
   script:
     - export FASTLANE_SKIP_UPDATE_CHECK=true
     - export FASTLANE_HIDE_TIMESTAMP=true
+    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
+    - export FASTLANE_SILENT=true
+    - export FASTLANE_DISABLE_COLORS=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
     - bundle exec fastlane setup_ci --verbose
@@ -78,6 +85,7 @@ test:
     - export FASTLANE_HIDE_TIMESTAMP=true
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
+    - export FASTLANE_DISABLE_COLORS=true
     - bundle exec fastlane test --verbose
   artifacts:
     reports:
@@ -98,6 +106,7 @@ build:
     - export FASTLANE_HIDE_TIMESTAMP=true
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
+    - export FASTLANE_DISABLE_COLORS=true
     - bundle exec fastlane build --verbose
   artifacts:
     paths:
@@ -142,6 +151,7 @@ deploy_testflight:
     - export FASTLANE_HIDE_TIMESTAMP=true
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
+    - export FASTLANE_DISABLE_COLORS=true
     - bundle exec fastlane beta --verbose
   only:
     - main
