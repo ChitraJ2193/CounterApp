@@ -25,28 +25,20 @@ stages:
 
 before_script:
   - brew install ruby@3.2 swiftlint
-  - echo 'export PATH="/Users/chitrajoshy/.homebrew/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
-  - echo 'export LDFLAGS="-L/Users/chitrajoshy/.homebrew/opt/ruby@3.2/lib"' >> ~/.bash_profile
-  - echo 'export CPPFLAGS="-I/Users/chitrajoshy/.homebrew/opt/ruby@3.2/include"' >> ~/.bash_profile
-  - source ~/.bash_profile
+  - export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"
+  - export LDFLAGS="-L/usr/local/opt/ruby@3.2/lib"
+  - export CPPFLAGS="-I/usr/local/opt/ruby@3.2/include"
   - gem install bundler
   - bundle install
-  - bundle exec fastlane setup_ci
-  - xcodebuild -list -project "$XCODE_PROJECT"
-  - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
 
 setup:
   stage: setup
   tags:
     - macOS
   script:
-    - brew install ruby@3.2 swiftlint
-    - echo 'export PATH="/Users/chitrajoshy/.homebrew/opt/ruby@3.2/bin:$PATH"' >> ~/.bash_profile
-    - echo 'export LDFLAGS="-L/Users/chitrajoshy/.homebrew/opt/ruby@3.2/lib"' >> ~/.bash_profile
-    - echo 'export CPPFLAGS="-I/Users/chitrajoshy/.homebrew/opt/ruby@3.2/include"' >> ~/.bash_profile
-    - source ~/.bash_profile
-    - gem install bundler
-    - bundle install
+    - bundle exec fastlane setup_ci
+    - xcodebuild -list -project "$XCODE_PROJECT"
+    - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
   artifacts:
     paths:
       - vendor/bundle/
@@ -60,7 +52,7 @@ lint:
     - swiftlint lint
   allow_failure: true
 
-unit_tests:
+test:
   stage: test
   tags:
     - macOS
@@ -72,19 +64,6 @@ unit_tests:
       coverage_report:
         coverage_format: cobertura
         path: build/reports/coverage.xml
-    paths:
-      - build/reports/
-    expire_in: 1 week
-
-ui_tests:
-  stage: test
-  tags:
-    - macOS
-  script:
-    - bundle exec fastlane test
-  artifacts:
-    reports:
-      junit: build/reports/ui-tests.xml
     paths:
       - build/reports/
     expire_in: 1 week
