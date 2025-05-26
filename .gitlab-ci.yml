@@ -56,7 +56,8 @@ before_script:
   - bundle config set clean 'true'
   - bundle config set --local without 'development test'
   - bundle config set --local deployment 'false'
-  - bundle install --jobs=4 --retry=3 --no-system-gems
+  - bundle config set --local system 'false'
+  - bundle install --jobs=4 --retry=3
 
 setup:
   stage: setup
