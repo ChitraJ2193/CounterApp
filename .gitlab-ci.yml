@@ -21,6 +21,8 @@ variables:
   FASTLANE_HIDE_TIMESTAMP: "true"
   FASTLANE_DISABLE_OUTPUT_FORMATTING: "true"
   FASTLANE_SILENT: "true"
+  RUBYOPT: "-W0"
+  BUNDLE_GEMFILE: "${CI_PROJECT_DIR}/Gemfile"
 
 stages:
   - setup
@@ -38,6 +40,7 @@ before_script:
   - gem install bundler -v 2.4.22
   - bundle config set --local path 'vendor/bundle'
   - bundle config set clean 'true'
+  - bundle config set --local without 'development test'
   - bundle install --jobs=4 --retry=3
 
 setup:
@@ -45,7 +48,10 @@ setup:
   tags:
     - macOS
   script:
-    - export RUBYOPT="-W0"
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
+    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
+    - export FASTLANE_SILENT=true
     - bundle exec fastlane setup_ci --verbose
     - xcodebuild -list -project "$XCODE_PROJECT"
     - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
@@ -68,7 +74,10 @@ test:
   tags:
     - macOS
   script:
-    - export RUBYOPT="-W0"
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
+    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
+    - export FASTLANE_SILENT=true
     - bundle exec fastlane test --verbose
   artifacts:
     reports:
@@ -85,7 +94,10 @@ build:
   tags:
     - macOS
   script:
-    - export RUBYOPT="-W0"
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
+    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
+    - export FASTLANE_SILENT=true
     - bundle exec fastlane build --verbose
   artifacts:
     paths:
@@ -126,7 +138,10 @@ deploy_testflight:
   tags:
     - macOS
   script:
-    - export RUBYOPT="-W0"
+    - export FASTLANE_SKIP_UPDATE_CHECK=true
+    - export FASTLANE_HIDE_TIMESTAMP=true
+    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
+    - export FASTLANE_SILENT=true
     - bundle exec fastlane beta --verbose
   only:
     - main
