@@ -24,6 +24,7 @@ variables:
   RUBYOPT: "-W0"
   BUNDLE_GEMFILE: "${CI_PROJECT_DIR}/Gemfile"
   FASTLANE_VERSION: "2.212.2"
+  RUBY_VERSION: "3.1.4"
 
 stages:
   - setup
@@ -33,10 +34,13 @@ stages:
   - deploy
 
 before_script:
+  - brew uninstall --force ruby@3.2 || true
   - brew install ruby@3.1 swiftlint
-  - export PATH="/usr/local/opt/ruby@3.1/bin:$PATH"
-  - export LDFLAGS="-L/usr/local/opt/ruby@3.1/lib"
-  - export CPPFLAGS="-I/usr/local/opt/ruby@3.1/include"
+  - echo 'export PATH="/usr/local/opt/ruby@3.1/bin:$PATH"' >> ~/.bash_profile
+  - echo 'export LDFLAGS="-L/usr/local/opt/ruby@3.1/lib"' >> ~/.bash_profile
+  - echo 'export CPPFLAGS="-I/usr/local/opt/ruby@3.1/include"' >> ~/.bash_profile
+  - source ~/.bash_profile
+  - ruby -v
   - gem uninstall bundler --all || true
   - gem install bundler -v 2.4.22
   - bundle config set --local path 'vendor/bundle'
