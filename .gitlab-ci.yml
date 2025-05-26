@@ -17,6 +17,10 @@ variables:
   MATCH_PASSWORD: "${MATCH_PASSWORD}"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
+  FASTLANE_SKIP_UPDATE_CHECK: "true"
+  FASTLANE_HIDE_TIMESTAMP: "true"
+  FASTLANE_DISABLE_OUTPUT_FORMATTING: "true"
+  FASTLANE_SILENT: "true"
 
 stages:
   - setup
@@ -30,20 +34,19 @@ before_script:
   - export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"
   - export LDFLAGS="-L/usr/local/opt/ruby@3.2/lib"
   - export CPPFLAGS="-I/usr/local/opt/ruby@3.2/include"
-  - gem uninstall bundler
+  - gem uninstall bundler --all
   - gem install bundler -v 2.4.22
   - bundle config set --local path 'vendor/bundle'
-  - bundle install --jobs=4 --retry=3
+  - bundle config set --local deployment 'true'
+  - bundle install --jobs=4 --retry=3 --clean
 
 setup:
   stage: setup
   tags:
     - macOS
   script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - bundle exec fastlane setup_ci
+    - export RUBYOPT="-W0"
+    - bundle exec fastlane setup_ci --verbose
     - xcodebuild -list -project "$XCODE_PROJECT"
     - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
   artifacts:
@@ -64,9 +67,8 @@ test:
   tags:
     - macOS
   script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - bundle exec fastlane test
+    - export RUBYOPT="-W0"
+    - bundle exec fastlane test --verbose
   artifacts:
     reports:
       junit: build/reports/junit.xml
@@ -82,9 +84,8 @@ build:
   tags:
     - macOS
   script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - bundle exec fastlane build
+    - export RUBYOPT="-W0"
+    - bundle exec fastlane build --verbose
   artifacts:
     paths:
       - build/
@@ -124,9 +125,8 @@ deploy_testflight:
   tags:
     - macOS
   script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - bundle exec fastlane beta
+    - export RUBYOPT="-W0"
+    - bundle exec fastlane beta --verbose
   only:
     - main
   when: manual 
