@@ -1,5 +1,5 @@
 image: 
-  name: ruby:3.1.4-slim
+  name: macos:latest
   entrypoint: [""]
 
 variables:
@@ -33,7 +33,10 @@ stages:
   - deploy
 
 before_script:
-  - apt-get update && apt-get install -y build-essential curl git
+  - brew install ruby@3.1 swiftlint
+  - export PATH="/usr/local/opt/ruby@3.1/bin:$PATH"
+  - export LDFLAGS="-L/usr/local/opt/ruby@3.1/lib"
+  - export CPPFLAGS="-I/usr/local/opt/ruby@3.1/include"
   - gem uninstall bundler --all || true
   - gem install bundler -v 2.4.22
   - bundle config set --local path 'vendor/bundle'
