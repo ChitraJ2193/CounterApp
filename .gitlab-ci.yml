@@ -34,11 +34,11 @@ before_script:
   - export PATH="/usr/local/opt/ruby@3.2/bin:$PATH"
   - export LDFLAGS="-L/usr/local/opt/ruby@3.2/lib"
   - export CPPFLAGS="-I/usr/local/opt/ruby@3.2/include"
-  - gem uninstall bundler --all
+  - gem uninstall bundler --all || true
   - gem install bundler -v 2.4.22
   - bundle config set --local path 'vendor/bundle'
-  - bundle config set --local deployment 'true'
-  - bundle install --jobs=4 --retry=3 --clean
+  - bundle config set clean 'true'
+  - bundle install --jobs=4 --retry=3
 
 setup:
   stage: setup
@@ -52,6 +52,7 @@ setup:
   artifacts:
     paths:
       - vendor/bundle/
+      - Gemfile.lock
     expire_in: 1 week
 
 lint:
