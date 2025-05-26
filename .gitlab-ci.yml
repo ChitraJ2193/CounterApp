@@ -34,22 +34,17 @@ stages:
   - deploy
 
 before_script:
-  - brew uninstall --force ruby@3.2 || true
-  - brew uninstall --force ruby@3.1 || true
-  - brew uninstall --force ruby@3.0 || true
-  - brew install ruby@3.0 swiftlint
-  - echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile
-  - source ~/.bash_profile
-  - echo 'export PATH="/opt/homebrew/opt/ruby@3.0/bin:$PATH"' >> ~/.bash_profile
-  - echo 'export LDFLAGS="-L/opt/homebrew/opt/ruby@3.0/lib"' >> ~/.bash_profile
-  - echo 'export CPPFLAGS="-I/opt/homebrew/opt/ruby@3.0/include"' >> ~/.bash_profile
-  - source ~/.bash_profile
+  - brew install rbenv ruby-build swiftlint
+  - eval "$(rbenv init -)"
+  - rbenv install 3.1.4
+  - rbenv global 3.1.4
+  - rbenv rehash
   - which ruby
   - ruby -v
   - rm -rf vendor/bundle
   - rm -f Gemfile.lock
   - gem uninstall bundler --all || true
-  - gem install bundler -v 2.4.22 --user-install
+  - gem install bundler -v 2.4.22
   - export BUNDLE_PATH="${CI_PROJECT_DIR}/vendor/bundle"
   - export BUNDLE_BIN="${CI_PROJECT_DIR}/vendor/bundle/bin"
   - export PATH="${BUNDLE_BIN}:${PATH}"
