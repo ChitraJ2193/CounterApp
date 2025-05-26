@@ -52,6 +52,9 @@ before_script:
   - export BUNDLE_PATH="${CI_PROJECT_DIR}/vendor/bundle"
   - export BUNDLE_BIN="${CI_PROJECT_DIR}/vendor/bundle/bin"
   - export PATH="${BUNDLE_BIN}:${PATH}"
+  - export RUBY_THREAD_VM_STACK_SIZE=1048576
+  - export RUBY_GC_HEAP_GROWTH_MAX_SLOTS=40000
+  - export RUBY_GC_HEAP_INIT_SLOTS=40000
   - bundle config set --local path 'vendor/bundle'
   - bundle config set clean 'true'
   - bundle config set --local without 'development test'
