@@ -36,18 +36,18 @@ stages:
 before_script:
   - brew uninstall --force ruby@3.2 || true
   - brew install ruby@3.1 swiftlint
-  - echo 'export PATH="/usr/local/opt/ruby@3.1/bin:$PATH"' >> ~/.bash_profile
-  - echo 'export LDFLAGS="-L/usr/local/opt/ruby@3.1/lib"' >> ~/.bash_profile
-  - echo 'export CPPFLAGS="-I/usr/local/opt/ruby@3.1/include"' >> ~/.bash_profile
-  - source ~/.bash_profile
-  - ruby -v
-  - gem uninstall bundler --all || true
-  - gem install bundler -v 2.4.22
-  - bundle config set --local path 'vendor/bundle'
-  - bundle config set clean 'true'
-  - bundle config set --local without 'development test'
-  - bundle config set --local deployment 'false'
-  - bundle install --jobs=4 --retry=3
+  - echo 'export PATH="/usr/local/opt/ruby@3.1/bin:$PATH"' >> ~/.zshrc
+  - echo 'export LDFLAGS="-L/usr/local/opt/ruby@3.1/lib"' >> ~/.zshrc
+  - echo 'export CPPFLAGS="-I/usr/local/opt/ruby@3.1/include"' >> ~/.zshrc
+  - source ~/.zshrc
+  - /usr/local/opt/ruby@3.1/bin/ruby -v
+  - /usr/local/opt/ruby@3.1/bin/gem uninstall bundler --all || true
+  - /usr/local/opt/ruby@3.1/bin/gem install bundler -v 2.4.22
+  - /usr/local/opt/ruby@3.1/bin/bundle config set --local path 'vendor/bundle'
+  - /usr/local/opt/ruby@3.1/bin/bundle config set clean 'true'
+  - /usr/local/opt/ruby@3.1/bin/bundle config set --local without 'development test'
+  - /usr/local/opt/ruby@3.1/bin/bundle config set --local deployment 'false'
+  - /usr/local/opt/ruby@3.1/bin/bundle install --jobs=4 --retry=3
 
 setup:
   stage: setup
@@ -63,7 +63,7 @@ setup:
     - export FASTLANE_SKIP_UPDATE_CHECK=true
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
-    - bundle exec fastlane setup_ci --verbose
+    - /usr/local/opt/ruby@3.1/bin/bundle exec fastlane setup_ci --verbose
     - xcodebuild -list -project "$XCODE_PROJECT"
     - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
   artifacts:
@@ -90,7 +90,7 @@ test:
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
     - export FASTLANE_DISABLE_COLORS=true
-    - bundle exec fastlane test --verbose
+    - /usr/local/opt/ruby@3.1/bin/bundle exec fastlane test --verbose
   artifacts:
     reports:
       junit: build/reports/junit.xml
@@ -111,7 +111,7 @@ build:
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
     - export FASTLANE_DISABLE_COLORS=true
-    - bundle exec fastlane build --verbose
+    - /usr/local/opt/ruby@3.1/bin/bundle exec fastlane build --verbose
   artifacts:
     paths:
       - build/
@@ -156,7 +156,7 @@ deploy_testflight:
     - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
     - export FASTLANE_SILENT=true
     - export FASTLANE_DISABLE_COLORS=true
-    - bundle exec fastlane beta --verbose
+    - /usr/local/opt/ruby@3.1/bin/bundle exec fastlane beta --verbose
   only:
     - main
   when: manual 
