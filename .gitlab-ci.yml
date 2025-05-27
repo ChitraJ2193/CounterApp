@@ -34,17 +34,18 @@ stages:
   - deploy
 
 before_script:
-  - brew install rbenv ruby-build swiftlint
+  - brew install rbenv ruby-build || true
   - eval "$(rbenv init -)"
-  - rbenv install 3.1.4
+  - rbenv install 3.1.4 --skip-existing || true
   - rbenv global 3.1.4
   - rbenv rehash
   - which ruby
   - ruby -v
+  - gem install bundler -v 2.4.22 || true
+  - bundle install
   - rm -rf vendor/bundle
   - rm -f Gemfile.lock
   - gem uninstall bundler --all || true
-  - gem install bundler -v 2.4.22
   - export BUNDLE_PATH="${CI_PROJECT_DIR}/vendor/bundle"
   - export BUNDLE_BIN="${CI_PROJECT_DIR}/vendor/bundle/bin"
   - export PATH="${BUNDLE_BIN}:${PATH}"
@@ -59,7 +60,6 @@ before_script:
   - bundle config set --local without 'development test'
   - bundle config set --local deployment 'false'
   - bundle config set --local system 'false'
-  - bundle install --jobs=4 --retry=3
 
 setup:
   stage: setup
@@ -118,12 +118,7 @@ build:
   tags:
     - macOS
   script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
-    - export FASTLANE_SILENT=true
-    - export FASTLANE_DISABLE_COLORS=true
-    - bundle exec fastlane build --verbose
+    - xcodebuild clean build -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphonesimulator
   artifacts:
     paths:
       - build/
