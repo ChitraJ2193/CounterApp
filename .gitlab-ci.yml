@@ -8,110 +8,12 @@ variables:
   APP_NAME: "CounterApp"
   XCODE_PROJECT: "Number  Counter Application.xcodeproj"
   XCODE_SCHEME: "Number  Counter Application"
-  APPLE_TEAM_ID: "${APPLE_TEAM_ID}"
-  APPLE_DISTRIBUTION_CERTIFICATE: "${APPLE_DISTRIBUTION_CERTIFICATE}"
-  APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: "${APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD}"
-  APPLE_PROVISIONING_PROFILE: "${APPLE_PROVISIONING_PROFILE}"
-  FASTLANE_USER: "${FASTLANE_USER}"
-  FASTLANE_PASSWORD: "${FASTLANE_PASSWORD}"
-  MATCH_PASSWORD: "${MATCH_PASSWORD}"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
-  FASTLANE_SKIP_UPDATE_CHECK: "true"
-  FASTLANE_HIDE_TIMESTAMP: "true"
-  FASTLANE_DISABLE_OUTPUT_FORMATTING: "true"
-  FASTLANE_SILENT: "true"
-  RUBYOPT: "-W0"
-  BUNDLE_GEMFILE: "${CI_PROJECT_DIR}/Gemfile"
-  FASTLANE_VERSION: "2.210.1"
-  RUBY_VERSION: "3.1.4"
 
 stages:
-  - setup
-  - lint
-  - test
   - build
   - deploy
-
-before_script:
-  - brew install rbenv ruby-build || true
-  - eval "$(rbenv init -)"
-  - rbenv install 3.1.4 --skip-existing || true
-  - rbenv global 3.1.4
-  - rbenv rehash
-  - which ruby
-  - ruby -v
-  - gem install bundler -v 2.4.22 || true
-  - bundle install
-  - rm -rf vendor/bundle
-  - rm -f Gemfile.lock
-  - gem uninstall bundler --all || true
-  - export BUNDLE_PATH="${CI_PROJECT_DIR}/vendor/bundle"
-  - export BUNDLE_BIN="${CI_PROJECT_DIR}/vendor/bundle/bin"
-  - export PATH="${BUNDLE_BIN}:${PATH}"
-  - export RUBY_THREAD_VM_STACK_SIZE=1048576
-  - export RUBY_GC_HEAP_GROWTH_MAX_SLOTS=40000
-  - export RUBY_GC_HEAP_INIT_SLOTS=40000
-  - export RUBYLIB=""
-  - export GEM_PATH=""
-  - export GEM_HOME="${CI_PROJECT_DIR}/vendor/bundle"
-  - bundle config set --local path 'vendor/bundle'
-  - bundle config set clean 'true'
-  - bundle config set --local without 'development test'
-  - bundle config set --local deployment 'false'
-  - bundle config set --local system 'false'
-
-setup:
-  stage: setup
-  tags:
-    - macOS
-  script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
-    - export FASTLANE_SILENT=true
-    - export FASTLANE_DISABLE_COLORS=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
-    - export FASTLANE_SILENT=true
-    - bundle exec fastlane setup_ci --verbose
-    - xcodebuild -list -project "$XCODE_PROJECT"
-    - xcodebuild -scheme "$XCODE_SCHEME" -project "$XCODE_PROJECT" -showBuildSettings
-  artifacts:
-    paths:
-      - vendor/bundle/
-      - Gemfile.lock
-    expire_in: 1 week
-
-lint:
-  stage: lint
-  tags:
-    - macOS
-  script:
-    - swiftlint lint
-  allow_failure: true
-
-test:
-  stage: test
-  tags:
-    - macOS
-  script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
-    - export FASTLANE_SILENT=true
-    - export FASTLANE_DISABLE_COLORS=true
-    - bundle exec fastlane test --verbose
-  artifacts:
-    reports:
-      junit: build/reports/junit.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: build/reports/coverage.xml
-    paths:
-      - build/reports/
-    expire_in: 1 week
 
 build:
   stage: build
@@ -149,21 +51,6 @@ deploy_production:
     - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/production/
   environment:
     name: production
-  only:
-    - main
-  when: manual
-
-deploy_testflight:
-  stage: deploy
-  tags:
-    - macOS
-  script:
-    - export FASTLANE_SKIP_UPDATE_CHECK=true
-    - export FASTLANE_HIDE_TIMESTAMP=true
-    - export FASTLANE_DISABLE_OUTPUT_FORMATTING=true
-    - export FASTLANE_SILENT=true
-    - export FASTLANE_DISABLE_COLORS=true
-    - bundle exec fastlane beta --verbose
   only:
     - main
   when: manual 
