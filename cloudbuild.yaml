@@ -1,0 +1,40 @@
+steps:
+  # Install dependencies
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        brew install rbenv ruby-build
+        eval "$(rbenv init -)"
+        rbenv install 3.1.4
+        rbenv global 3.1.4
+        rbenv rehash
+        gem install bundler -v 2.4.22
+        bundle install
+
+  # Build iOS app
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        xcodebuild clean build \
+          -project "Number  Counter Application.xcodeproj" \
+          -scheme "Number  Counter Application" \
+          -configuration Release \
+          -sdk iphonesimulator
+
+  # Deploy to GCS
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args:
+      - 'cp'
+      - '-r'
+      - 'build/Build/Products/Release-iphonesimulator/*'
+      - 'gs://counter_gitcicd_app/ios-builds/${_ENVIRONMENT}/'
+
+substitutions:
+  _ENVIRONMENT: 'staging'  # Default to staging, can be overridden
+
+options:
+  logging: CLOUD_LOGGING_ONLY 
