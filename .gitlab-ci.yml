@@ -16,13 +16,21 @@ stages:
   - deploy
 
 before_script:
-  # Clean up previous GCloud SDK installation
-  - rm -rf /Users/chitrajoshy/google-cloud-sdk || true
-  # Install Google Cloud CLI
-  - curl https://sdk.cloud.google.com | bash
-  - source ~/.bashrc || source ~/.zshrc || source ~/.bash_profile
-  - gcloud init --console-only --quiet
-  - gcloud components install gsutil --quiet
+  # Install Google Cloud CLI manually
+  - GCLOUD_SDK_VERSION="477.0.0"
+  - GCLOUD_SDK_ARCH="darwin-x86_64"
+  - GCLOUD_SDK_TAR="google-cloud-sdk-${GCLOUD_SDK_VERSION}-${GCLOUD_SDK_ARCH}.tar.gz"
+  - GCLOUD_SDK_URL="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_SDK_TAR}"
+  - curl -f -o /tmp/${GCLOUD_SDK_TAR} ${GCLOUD_SDK_URL}
+  - tar zxf /tmp/${GCLOUD_SDK_TAR} -C /Users/chitrajoshy/
+  - export PATH="/Users/chitrajoshy/google-cloud-sdk/bin:$PATH"
+  - gcloud version
+  - gcloud components install gsutil --quiet || true
+  
+  # Authenticate and set project
+  - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
+  - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcp-key.json
+  - gcloud config set project $PROJECT_ID
 
 build:
   stage: build
@@ -40,9 +48,6 @@ deploy_staging:
   tags:
     - macOS
   script:
-    - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
-    - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcp-key.json
-    - gcloud config set project $PROJECT_ID
     - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/staging/
   environment:
     name: staging
@@ -54,9 +59,6 @@ deploy_production:
   tags:
     - macOS
   script:
-    - echo "$GCP_SERVICE_KEY" > ${CI_PROJECT_DIR}/gcp-key.json
-    - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcp-key.json
-    - gcloud config set project $PROJECT_ID
     - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/production/
   environment:
     name: production
