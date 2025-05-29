@@ -15,6 +15,13 @@ stages:
   - build
   - deploy
 
+before_script:
+  # Install Google Cloud CLI
+  - curl https://sdk.cloud.google.com | bash
+  - source ~/.bashrc || source ~/.zshrc || source ~/.bash_profile
+  - gcloud init --console-only --quiet
+  - gcloud components install gsutil --quiet
+
 build:
   stage: build
   tags:
