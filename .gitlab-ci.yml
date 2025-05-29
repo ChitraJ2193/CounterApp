@@ -80,6 +80,6 @@ test:
   tags:
     - macOS
   script:
-    - xcodebuild test -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -destination 'platform=iOS Simulator,name=iPhone 14' # Example test command
+    - xcodebuild test -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' # Example test command
   dependencies:
     - build # Tests would depend on the build output or artifacts 
