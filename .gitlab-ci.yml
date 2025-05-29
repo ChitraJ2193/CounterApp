@@ -16,6 +16,8 @@ stages:
   - deploy
 
 before_script:
+  # Clean up previous GCloud SDK installation
+  - rm -rf /Users/chitrajoshy/google-cloud-sdk || true
   # Install Google Cloud CLI
   - curl https://sdk.cloud.google.com | bash
   - source ~/.bashrc || source ~/.zshrc || source ~/.bash_profile
