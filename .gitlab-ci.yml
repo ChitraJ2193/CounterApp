@@ -15,6 +15,7 @@ variables:
 
 stages:
   - build
+  - test
   - deploy
 
 before_script:
@@ -73,3 +74,12 @@ deploy_production:
   only:
     - main
   when: manual 
+
+test:
+  stage: test # This stage would run after 'build'
+  tags:
+    - macOS
+  script:
+    - xcodebuild test -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -destination 'platform=iOS Simulator,name=iPhone 14' # Example test command
+  dependencies:
+    - build # Tests would depend on the build output or artifacts 
