@@ -39,7 +39,7 @@ build:
   tags:
     - macOS
   script:
-    - xcodebuild clean build -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphonesimulator
+    - xcodebuild clean build -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphonesimulator -derivedDataPath build
     # Verify the build output path exists and list its contents
     - ls -lR ${BUILD_OUTPUT_PATH}
   artifacts:
