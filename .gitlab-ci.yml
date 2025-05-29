@@ -10,6 +10,8 @@ variables:
   XCODE_SCHEME: "Number  Counter Application"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
+  # Define the build output path as a variable
+  BUILD_OUTPUT_PATH: "build/Build/Products/Release-iphonesimulator"
 
 stages:
   - build
@@ -38,17 +40,21 @@ build:
     - macOS
   script:
     - xcodebuild clean build -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphonesimulator
+    # Verify the build output path exists and list its contents
+    - ls -lR ${BUILD_OUTPUT_PATH}
   artifacts:
     paths:
-      - build/
+      - ${BUILD_OUTPUT_PATH}/
     expire_in: 1 week
 
 deploy_staging:
   stage: deploy
   tags:
     - macOS
+  dependencies:
+    - build
   script:
-    - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/staging/
+    - gsutil cp -r ${BUILD_OUTPUT_PATH}/* gs://counter_gitcicd_app/ios-builds/staging/
   environment:
     name: staging
   only:
@@ -58,8 +64,10 @@ deploy_production:
   stage: deploy
   tags:
     - macOS
+  dependencies:
+    - build
   script:
-    - gsutil cp -r build/Build/Products/Release-iphonesimulator/* gs://counter_gitcicd_app/ios-builds/production/
+    - gsutil cp -r ${BUILD_OUTPUT_PATH}/* gs://counter_gitcicd_app/ios-builds/production/
   environment:
     name: production
   only:
