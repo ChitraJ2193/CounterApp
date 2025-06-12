@@ -31,128 +31,82 @@ jobs:
       with:
         xcode-version: latest-stable
         
-    # Stage 3: Debug Project Structure
-    - name: Debug Project Structure
+    # Stage 3: List available simulators
+    - name: List available simulators
       run: |
-        echo "🔍 Debugging project structure..."
-        echo "Current directory: $(pwd)"
-        echo "Files in current directory:"
-        ls -la
+        echo "📱 Available iOS Simulators:"
+        xcrun simctl list devices | grep iPhone | head -5
+        
+    # Stage 4: Simple iOS Build Test
+    - name: Simple iOS Build Test
+      run: |
+        echo "🏗️ Starting simple iOS build..."
+        
+        # Create build directory
+        mkdir -p build-output
+        
+        # List project info first
+        echo "Project information:"
+        xcodebuild -list -project "$XCODE_PROJECT"
+        
         echo ""
-        echo "Looking for Xcode project:"
-        find . -name "*.xcodeproj" -type d
-        echo ""
-        echo "Project contents:"
-        ls -la "$XCODE_PROJECT" || echo "Project not found"
+        echo "Starting build with specific destination..."
         
-    # Stage 4: Cache dependencies
-    - name: Cache Ruby gems
-      uses: actions/cache@v4
-      with:
-        path: vendor/bundle
-        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-gems-
-          
-    # Stage 5: Install Ruby dependencies
-    - name: Install Ruby dependencies
-      run: |
-        gem install bundler
-        bundle config path vendor/bundle
-        bundle install --jobs 4 --retry 3
-        
-    # Stage 6: Build iOS App
-    - name: Build iOS App for Simulator
-      run: |
-        echo "🏗️ Building iOS app for simulator..."
-        
-        # Set up variables with proper quoting
-        PROJECT_PATH="${{ github.workspace }}/$XCODE_PROJECT"
-        BUILD_PATH="${{ github.workspace }}/build"
-        
-        echo "Project path: $PROJECT_PATH"
-        echo "Build path: $BUILD_PATH"
-        
-        # Clean any existing build
-        rm -rf "$BUILD_PATH"
-        
-        # Build for simulator with explicit paths
-        xcodebuild clean build \
-          -project "$PROJECT_PATH" \
+        # Simple build command with explicit destination
+        xcodebuild build \
+          -project "$XCODE_PROJECT" \
           -scheme "$XCODE_SCHEME" \
           -configuration Release \
-          -sdk iphonesimulator \
-          -derivedDataPath "$BUILD_PATH" \
+          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+          -derivedDataPath build-output \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGN_IDENTITY="" \
           PROVISIONING_PROFILE=""
         
-        echo "✅ Build command completed"
-        echo "Build directory structure:"
-        find "$BUILD_PATH" -type f -name "*.app" 2>/dev/null || echo "No .app files found"
-        find "$BUILD_PATH" -type d -name "*.app" 2>/dev/null || echo "No .app directories found"
+        echo "✅ Build completed successfully"
         
-    # Stage 7: Locate and Prepare Artifacts
-    - name: Locate and Prepare Artifacts
+    # Stage 5: Find and Package Build Outputs
+    - name: Find and Package Build Outputs
       run: |
-        echo "📁 Locating and preparing artifacts..."
+        echo "📦 Searching for build outputs..."
         
         # Create artifacts directory
         mkdir -p artifacts
         
-        echo "=== BUILD DIRECTORY ANALYSIS ==="
-        BUILD_PATH="${{ github.workspace }}/build"
-        
-        if [ -d "$BUILD_PATH" ]; then
-          echo "Build directory exists. Full structure:"
-          find "$BUILD_PATH" -type f | head -20
-          echo ""
-          
-          echo "Looking for .app bundles:"
-          find "$BUILD_PATH" -name "*.app" -type d
-          
-          echo "Looking for specific paths:"
-          if [ -d "$BUILD_PATH/Build/Products" ]; then
-            echo "Found Build/Products directory:"
-            ls -la "$BUILD_PATH/Build/Products/"
-            
-            # Check for Release-iphonesimulator
-            if [ -d "$BUILD_PATH/Build/Products/Release-iphonesimulator" ]; then
-              echo "Found Release-iphonesimulator directory:"
-              ls -la "$BUILD_PATH/Build/Products/Release-iphonesimulator/"
-              cp -r "$BUILD_PATH/Build/Products/Release-iphonesimulator"/* artifacts/
-              echo "Copied simulator build products"
-            else
-              echo "Release-iphonesimulator not found, checking other Release directories:"
-              find "$BUILD_PATH/Build/Products" -name "Release*" -type d
-            fi
-          else
-            echo "Build/Products not found, searching entire build directory for .app files:"
-            find "$BUILD_PATH" -name "*.app" -type d -exec cp -r {} artifacts/ \;
+        # Search for .app bundles
+        echo "Looking for .app files in build-output:"
+        find build-output -name "*.app" -type d | while read app_path; do
+          if [ -d "$app_path" ]; then
+            echo "Found: $app_path"
+            app_name=$(basename "$app_path")
+            cp -r "$app_path" "artifacts/$app_name"
+            echo "Copied $app_name to artifacts"
           fi
-        else
-          echo "❌ Build directory does not exist!"
-        fi
+        done
         
-        # Always create version file
+        # Search for any built products
+        echo ""
+        echo "All build products:"
+        find build-output -name "*.app" -o -name "*.dSYM" -o -name "*.swiftmodule" | head -10
+        
+        # Create version and build info files
         echo "${VERSION_PREFIX}-$(date +%Y%m%d)-${{ github.run_id }}" > artifacts/version.txt
-        echo "Building version: $(cat artifacts/version.txt)"
+        echo "Build completed: $(date)" > artifacts/build-info.txt
+        echo "GitHub Runner: ${{ runner.os }}" >> artifacts/build-info.txt
+        echo "Xcode Version: $(xcodebuild -version | head -1)" >> artifacts/build-info.txt
         
-        # Create a simple test file to ensure artifacts directory has content
-        echo "Build completed at $(date)" > artifacts/build-info.txt
-        echo "GitHub Run ID: ${{ github.run_id }}" >> artifacts/build-info.txt
+        # Always ensure we have some content
+        echo "iOS CounterApp v2.0 - Built on GitHub Actions" > artifacts/README.txt
         
-        echo "=== FINAL ARTIFACTS ==="
-        echo "Artifacts directory contents:"
+        echo ""
+        echo "Final artifacts:"
         ls -la artifacts/
         
-        # Ensure we have at least some content
-        if [ ! "$(ls -A artifacts/)" ]; then
-          echo "⚠️ Artifacts directory is empty, creating minimal artifacts..."
-          echo "No build outputs found" > artifacts/build-status.txt
-        fi
+        # Count files to ensure we have content
+        file_count=$(ls -1 artifacts/ | wc -l)
+        echo "Total artifacts: $file_count"
         
-    # Stage 8: Setup Google Cloud CLI
+    # Stage 6: Setup Google Cloud CLI
     - name: Setup Google Cloud CLI
       uses: google-github-actions/setup-gcloud@v2
       with:
@@ -160,7 +114,7 @@ jobs:
         service_account_key: ${{ secrets.GCP_SERVICE_KEY }}
         export_default_credentials: true
         
-    # Stage 9: Upload to Cloud Storage
+    # Stage 7: Upload to Cloud Storage
     - name: Upload to Cloud Storage
       run: |
         # Determine environment based on branch
@@ -170,34 +124,25 @@ jobs:
           ENVIRONMENT="staging"
         fi
         
-        echo "Deploying to environment: $ENVIRONMENT"
-        
-        # Upload artifacts to GCS (always upload what we have)
-        echo "📤 Uploading artifacts to GCS..."
-        echo "Current artifacts:"
+        echo "🚀 Uploading to GCS environment: $ENVIRONMENT"
+        echo "Artifacts to upload:"
         ls -la artifacts/
         
-        # Upload all files in artifacts directory
-        if [ "$(ls -A artifacts/)" ]; then
-          gsutil -m cp -r artifacts/* gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/
-          echo "✅ Upload completed"
-          
-          # Upload versioned file if it exists
-          if [ -f "artifacts/version.txt" ]; then
-            gsutil cp artifacts/version.txt gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/latest-version.txt
-          fi
-        else
-          echo "⚠️ No artifacts to upload"
+        # Upload everything in artifacts
+        gsutil -m cp -r artifacts/* gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/
+        
+        # Upload version file as latest
+        if [ -f "artifacts/version.txt" ]; then
+          gsutil cp artifacts/version.txt gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/latest-version.txt
         fi
         
-    # Stage 10: Archive Build Artifacts (Always try to archive something)
+        echo "✅ Upload completed to gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/"
+        
+    # Stage 8: Archive Build Artifacts
     - name: Archive build artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: ios-build-artifacts-${{ github.run_id }}
-        path: |
-          artifacts/
-          build/
-        retention-days: 7
-        if-no-files-found: warn 
+        name: ios-build-${{ github.run_id }}
+        path: artifacts/
+        retention-days: 7 
