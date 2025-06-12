@@ -48,27 +48,69 @@ jobs:
         bundle install --jobs 4 --retry 3
         
     # Stage 5: Build iOS App
-    - name: Build iOS App
+    - name: Build iOS App for Simulator
       run: |
+        echo "🏗️ Building iOS app for simulator..."
+        
+        # Clean and build for simulator
         xcodebuild clean build \
           -project "$XCODE_PROJECT" \
           -scheme "$XCODE_SCHEME" \
           -configuration Release \
           -sdk iphonesimulator \
-          -derivedDataPath build \
-          -archivePath build/CounterApp.xcarchive \
-          archive
+          -derivedDataPath build
+        
+        echo "✅ Simulator build completed"
+        
+    # Stage 5b: Create Archive
+    - name: Create iOS Archive
+      run: |
+        echo "📦 Creating iOS archive..."
+        
+        # Create archive for App Store
+        xcodebuild archive \
+          -project "$XCODE_PROJECT" \
+          -scheme "$XCODE_SCHEME" \
+          -configuration Release \
+          -archivePath build/CounterApp.xcarchive
+        
+        echo "✅ Archive created"
+        
+    # Stage 5c: Prepare Artifacts
+    - name: Prepare Build Artifacts
+      run: |
+        echo "📁 Preparing artifacts..."
         
         # Create artifacts directory
         mkdir -p artifacts
         
-        # Copy build artifacts
-        cp -r build/Build/Products/Release-iphonesimulator/* artifacts/ || true
-        cp -r build/CounterApp.xcarchive artifacts/ || true
+        # List build output to debug
+        echo "Build directory contents:"
+        ls -la build/ || echo "No build directory"
         
-        # Create version file
+        if [ -d "build/Build/Products/Release-iphonesimulator" ]; then
+          echo "Found simulator build products"
+          cp -r build/Build/Products/Release-iphonesimulator/* artifacts/
+        else
+          echo "⚠️ Simulator build products not found, checking alternative paths..."
+          find build -name "*.app" -type d | head -5
+        fi
+        
+        # Copy archive if it exists
+        if [ -d "build/CounterApp.xcarchive" ]; then
+          echo "Found archive"
+          cp -r build/CounterApp.xcarchive artifacts/
+        else
+          echo "⚠️ Archive not found"
+        fi
+        
+        # Create version file (always create this)
         echo "${VERSION_PREFIX}-$(date +%Y%m%d)-${{ github.run_id }}" > artifacts/version.txt
         echo "Building version: $(cat artifacts/version.txt)"
+        
+        # List final artifacts
+        echo "Final artifacts:"
+        ls -la artifacts/ || echo "No artifacts directory created"
         
     # Stage 6: Setup Google Cloud CLI
     - name: Setup Google Cloud CLI
@@ -90,11 +132,21 @@ jobs:
         
         echo "Deploying to environment: $ENVIRONMENT"
         
-        # Upload artifacts to GCS
-        gsutil -m cp -r artifacts/* gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/
-        
-        # Upload versioned archive
-        gsutil cp artifacts/version.txt gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/latest-version.txt
+        # Check if artifacts exist before uploading
+        if [ -d "artifacts" ] && [ "$(ls -A artifacts)" ]; then
+          echo "📤 Uploading artifacts to GCS..."
+          gsutil -m cp -r artifacts/* gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/
+          
+          # Upload versioned file
+          if [ -f "artifacts/version.txt" ]; then
+            gsutil cp artifacts/version.txt gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/latest-version.txt
+          fi
+          
+          echo "✅ Upload completed"
+        else
+          echo "⚠️ No artifacts found to upload"
+          exit 1
+        fi
         
     # Stage 8: Prepare for App Store (Production only)
     - name: Setup App Store Credentials
@@ -155,5 +207,6 @@ jobs:
         name: ios-build-artifacts-${{ github.run_id }}
         path: |
           artifacts/
-          build/
-        retention-days: 7 
+          build/Build/Products/
+        retention-days: 7
+        if-no-files-found: warn 
