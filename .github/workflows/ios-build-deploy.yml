@@ -1,0 +1,159 @@
+name: iOS Build and Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: "counterapplication-460304"
+  PROJECT_NUMBER: "189419000467"
+  APP_NAME: "CounterApp"
+  XCODE_PROJECT: "Number  Counter Application.xcodeproj"
+  XCODE_SCHEME: "Number  Counter Application"
+  BUCKET_NAME: "counter_gitcicd_app"
+  VERSION_PREFIX: "1.0.3"
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    steps:
+    # Stage 1: Checkout Code
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Stage 2: Setup Xcode
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    # Stage 3: Cache dependencies
+    - name: Cache Ruby gems
+      uses: actions/cache@v3
+      with:
+        path: vendor/bundle
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gems-
+          
+    # Stage 4: Install Ruby dependencies
+    - name: Install Ruby dependencies
+      run: |
+        gem install bundler
+        bundle config path vendor/bundle
+        bundle install --jobs 4 --retry 3
+        
+    # Stage 5: Build iOS App
+    - name: Build iOS App
+      run: |
+        xcodebuild clean build \
+          -project "$XCODE_PROJECT" \
+          -scheme "$XCODE_SCHEME" \
+          -configuration Release \
+          -sdk iphonesimulator \
+          -derivedDataPath build \
+          -archivePath build/CounterApp.xcarchive \
+          archive
+        
+        # Create artifacts directory
+        mkdir -p artifacts
+        
+        # Copy build artifacts
+        cp -r build/Build/Products/Release-iphonesimulator/* artifacts/ || true
+        cp -r build/CounterApp.xcarchive artifacts/ || true
+        
+        # Create version file
+        echo "${VERSION_PREFIX}-$(date +%Y%m%d)-${{ github.run_id }}" > artifacts/version.txt
+        echo "Building version: $(cat artifacts/version.txt)"
+        
+    # Stage 6: Setup Google Cloud CLI
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SERVICE_KEY }}
+        export_default_credentials: true
+        
+    # Stage 7: Upload to Cloud Storage
+    - name: Upload to Cloud Storage
+      run: |
+        # Determine environment based on branch
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          ENVIRONMENT="production"
+        else
+          ENVIRONMENT="staging"
+        fi
+        
+        echo "Deploying to environment: $ENVIRONMENT"
+        
+        # Upload artifacts to GCS
+        gsutil -m cp -r artifacts/* gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/
+        
+        # Upload versioned archive
+        gsutil cp artifacts/version.txt gs://${{ env.BUCKET_NAME }}/ios-builds/$ENVIRONMENT/latest-version.txt
+        
+    # Stage 8: Prepare for App Store (Production only)
+    - name: Setup App Store Credentials
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Setting up App Store Connect credentials..."
+        
+        # Create directory for credentials
+        mkdir -p private_keys
+        
+        # Get App Store Connect API key from secrets
+        echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 -d > private_keys/AuthKey_${{ secrets.API_KEY_ID }}.p8
+        chmod 600 private_keys/AuthKey_${{ secrets.API_KEY_ID }}.p8
+        
+        echo "App Store credentials configured"
+        
+    # Stage 9: Deploy to App Store (Production only)
+    - name: Deploy to App Store
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Create Fastfile for App Store deployment
+        mkdir -p fastlane
+        cat > fastlane/Fastfile <<EOF
+        default_platform(:ios)
+        
+        platform :ios do
+          desc "Upload to TestFlight"
+          lane :deploy_testflight do
+            # Build for App Store
+            build_app(
+              project: "$XCODE_PROJECT",
+              scheme: "$XCODE_SCHEME",
+              configuration: "Release",
+              output_directory: "artifacts",
+              output_name: "CounterApp.ipa",
+              export_method: "app-store"
+            )
+            
+            # Upload to TestFlight
+            upload_to_testflight(
+              api_key_path: "private_keys/AuthKey_${{ secrets.API_KEY_ID }}.p8",
+              issuer_id: "${{ secrets.APP_STORE_ISSUER_ID }}",
+              key_id: "${{ secrets.API_KEY_ID }}",
+              skip_waiting_for_build_processing: true
+            )
+          end
+        end
+        EOF
+        
+        # Run Fastlane
+        bundle exec fastlane ios deploy_testflight
+        
+    # Stage 10: Archive Build Artifacts
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: ios-build-artifacts-${{ github.run_id }}
+        path: |
+          artifacts/
+          build/
+        retention-days: 7 
