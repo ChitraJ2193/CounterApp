@@ -11,22 +11,36 @@ struct ContentView: View {
     @State private var count = 0
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("New Counter Test New label IPA")
+        VStack(spacing: 30) {
+            Text("iOS Counter App")
                 .font(.largeTitle)
                 .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Text("CI/CD Pipeline Test")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
             
             Text("\(count)")
-                .font(.system(size: 60))
-                .fontWeight(.medium)
+                .font(.system(size: 80, weight: .medium, design: .rounded))
+                .foregroundColor(count >= 0 ? .blue : .red)
+                .animation(.easeInOut(duration: 0.2), value: count)
             
-            HStack(spacing: 20) {
+            HStack(spacing: 30) {
                 Button(action: {
                     count -= 1
                 }) {
                     Image(systemName: "minus.circle.fill")
                         .font(.system(size: 44))
                         .foregroundColor(.red)
+                }
+                
+                Button(action: {
+                    count = 0
+                }) {
+                    Image(systemName: "arrow.clockwise.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.orange)
                 }
                 
                 Button(action: {
