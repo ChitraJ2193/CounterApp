@@ -33,7 +33,7 @@ jobs:
         
     # Stage 3: Cache dependencies
     - name: Cache Ruby gems
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: vendor/bundle
         key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -72,7 +72,7 @@ jobs:
         
     # Stage 6: Setup Google Cloud CLI
     - name: Setup Google Cloud CLI
-      uses: google-github-actions/setup-gcloud@v1
+      uses: google-github-actions/setup-gcloud@v2
       with:
         project_id: ${{ env.PROJECT_ID }}
         service_account_key: ${{ secrets.GCP_SERVICE_KEY }}
@@ -149,7 +149,7 @@ jobs:
         
     # Stage 10: Archive Build Artifacts
     - name: Archive build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: ios-build-artifacts-${{ github.run_id }}
